@@ -3,9 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var router = require('./routes/index.routes'); 
 
 var app = express();
 
@@ -19,8 +17,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
- 
-app.use('/users', usersRouter);
+//Setup all routes
+app.use('/api/v1/', router); 
 
 // Default page    
 app.get("/", (req, res) => {
