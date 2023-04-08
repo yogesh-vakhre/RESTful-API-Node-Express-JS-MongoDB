@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const hpp = require('hpp');
 const helmet = require("helmet");
+const xss = require('xss-clean');
 
 const indexRouter = require('./routes/index.routes');
  
@@ -20,6 +21,9 @@ app.use(hpp());
 
 //Helmet helps you secure your Express apps by setting various HTTP headers
 app.use(helmet());
+
+//Node.js Connect middleware to sanitize user input coming from POST body, GET queries, and url params
+app.use(xss());
 
 //Setup all routes
 app.use('/api/v1/', indexRouter); 
