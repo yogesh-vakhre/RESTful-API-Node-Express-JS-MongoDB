@@ -6,6 +6,7 @@ const hpp = require('hpp');
 const helmet = require("helmet");
 const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit')
 
 const indexRouter = require('./routes/index.routes');
  
@@ -16,6 +17,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Basic rate-limiting middleware for Express
+const limiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100, // Limit each IP to 100 create account requests per `window` (here, per hour)
+  message:'Too many accounts created from this IP, please try again after an hour',  
+})
+
+// Apply the rate limiting middleware to all requests
+app.use(limiter)
 
 // Setup Express middleware to protect against HTTP Parameter Pollution attacks
 app.use(hpp());
