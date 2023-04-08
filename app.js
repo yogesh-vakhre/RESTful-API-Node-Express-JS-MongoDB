@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const cors = require("cors")
 const hpp = require('hpp');
 const helmet = require("helmet");
 const xss = require('xss-clean');
@@ -11,6 +12,22 @@ const rateLimit = require('express-rate-limit')
 const indexRouter = require('./routes/index.routes');
  
 const app = express();
+
+// Configure CORS Policies
+const corsOptions = {
+  origin: "*",
+  credentials: true,
+  optionSuccessStatus: 200,
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+  ],
+  methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+};
+app.use(cors(corsOptions)); 
 
 app.use(logger('dev'));
 app.use(express.json());
