@@ -5,6 +5,7 @@ const logger = require('morgan');
 const hpp = require('hpp');
 const helmet = require("helmet");
 const xss = require('xss-clean');
+const mongoSanitize = require('express-mongo-sanitize');
 
 const indexRouter = require('./routes/index.routes');
  
@@ -19,11 +20,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Setup Express middleware to protect against HTTP Parameter Pollution attacks
 app.use(hpp());
 
-//Helmet helps you secure your Express apps by setting various HTTP headers
+// Helmet helps you secure your Express apps by setting various HTTP headers
 app.use(helmet());
 
-//Node.js Connect middleware to sanitize user input coming from POST body, GET queries, and url params
+// Node.js Connect middleware to sanitize user input coming from POST body, GET queries, and url params
 app.use(xss());
+
+// Express middleware which sanitizes user-supplied data to prevent MongoDB Operator Injection
+app.use(mongoSanitize());
 
 //Setup all routes
 app.use('/api/v1/', indexRouter); 
