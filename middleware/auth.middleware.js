@@ -17,7 +17,7 @@ const verifyToken = (req, res, next) => {
   }
   try {
     const decoded = jwt.verify(token, config.TOKEN_KEY);
-    const currentUser = User.findById(decoded.user_id);
+    const currentUser = User.findById(decoded.id);
     
     // Check User
     if (!currentUser) {
