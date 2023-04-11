@@ -1,154 +1,137 @@
 const User = require("../models/user.model");
- 
+const AppError = require("../utils/appError");
+const catchAsync = require('../utils/catchAsync');
+
 // Create and Save a new User
-exports.create = (req, res) => {
+exports.create = catchAsync(async(req, res) => {
   console.log(req.body);
   // Validate request
   if (!req.body.name) {
-    res.status(400).send({ message: "Name can not be empty!" });
-    return;
+    return next(new AppError("Name can not be empty!", 400));
   }
 
   if (!req.body.email) {
-    res.status(400).send({ message: "Email can not be empty!" });
-    return;
+    return next(new AppError("Email can not be empty!", 400));
   }
 
   if (!req.body.password) {
-    res.status(400).send({ message: "Password can not be empty!" });
-    return;
+    return next(new AppError("Password can not be empty!", 400));
   }
 
   // Create a User
-  const user = new User({
+  const user = await User({
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
     published: req.body.published ? req.body.published : false
-  });
-
+  }).save();
+  
   // Save User in the database
-  user
-    .save(user)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the User."
-      });
-    });
-};
+
+  if (!user) {
+    return next(new AppError("Some error occurred while creating the user", 400));
+  }
+
+  res.status(200).json({
+    status: "success",    
+    user
+  });   
+   
+});
 
 // Retrieve all Users from the database.
-exports.findAll = (req, res) => {
+exports.findAll = catchAsync(async(req, res) => {
   const name = req.query.name;
   var condition = name ? { name: { $regex: new RegExp(name), $options: "i" } } : {};
 
-  User.find(condition)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Users."
-      });
-    });
-};
+  const users = await User.find(condition);
+  if (!users) {
+    return next(new AppError("Some error occurred while retrieving users", 400));
+  }
+
+  res.status(200).json({
+    status: "success",    
+    users
+  });
+});
 
 // Find a single User with an id
-exports.findOne = (req, res) => {
+exports.findOne = catchAsync(async(req, res) => {
   const id = req.params.id;
 
-  User.findById(id)
-    .then(data => {
-      if (!data)
-        res.status(404).send({ message: "Not found User with id " + id });
-      else res.send(data);
-    })
-    .catch(err => {
-      res
-        .status(500)
-        .send({ message: "Error retrieving User with id=" + id });
-    });
-};
+  // Find a single Category
+  const user = await User.findById(id);
+  if (!user) {
+    return next(new AppError("Not found user with id " + id, 404));
+  }
+
+  res.status(200).json({
+    status: "success",    
+    user
+  });
+
+});
 
 // Update a User by the id in the request
-exports.update = (req, res) => {
+exports.update = catchAsync(async(req, res) => {
   if (!req.body) {
-    return res.status(400).send({
-      message: "Data to update can not be empty!"
-    });
+    return next(new AppError("Data to update can not be empty!", 400));     
   }
 
   const id = req.params.id;
+  const user = await User.findByIdAndUpdate(id, req.body, { useFindAndModify: false });
+  
+  if (!user) {
+    return next(new AppError(`Cannot update user with id=${id}. Maybe user was not found!`, 404));
+  }
 
-  User.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-    .then(data => {
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot update User with id=${id}. Maybe User was not found!`
-        });
-      } else res.send({ message: "User was updated successfully." });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Error updating User with id=" + id
-      });
-    });
-};
+  res.status(200).json({
+    status: "success",
+    message: "User was updated successfully.",   
+    user
+  });
+   
+});
 
 // Delete a User with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = catchAsync(async(req, res) => {
   const id = req.params.id;
 
-  User.findByIdAndRemove(id, { useFindAndModify: false })
-    .then(data => {
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot delete User with id=${id}. Maybe User was not found!`
-        });
-      } else {
-        res.send({
-          message: "User was deleted successfully!"
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: "Could not delete User with id=" + id
-      });
-    });
-};
+  const user = await User.findByIdAndRemove(id, { useFindAndModify: false });
+  if (!user) {
+    return next(new AppError(`Cannot update user with id=${id}. Maybe user was not found!`, 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "User was deleted successfully!",   
+    user
+  });
+
+});
 
 // Delete all Users from the database.
-exports.deleteAll = (req, res) => {
-  User.deleteMany({})
-    .then(data => {
-      res.send({
-        message: `${data.deletedCount} Users were deleted successfully!`
-      });
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all Users."
-      });
-    });
-};
+exports.deleteAll = catchAsync(async(req, res) => {
+  const user = await User.deleteMany({});
+  if (!user) {
+    return next(new AppError(`Some error occurred while removing all users!`, 500));
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: `${data.deletedCount} Users were deleted successfully!`,   
+   });
+});
 
 // Find all published Users
-exports.findAllPublished = (req, res) => {
-  User.find({ published: true })
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving Users."
-      });
-    });
-};
+exports.findAllPublished = catchAsync(async(req, res) => {
+  const users = await User.find({ published: true });
+  if (!users) {
+    return next(new AppError("Some error occurred while retrieving users.", 500));
+  }
+
+  res.status(200).json({
+    status: "success",
+    users
+  });
+});

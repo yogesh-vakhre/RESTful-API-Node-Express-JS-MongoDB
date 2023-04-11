@@ -1,145 +1,131 @@
 const Category = require("../models/category.model");
+const AppError = require("../utils/appError");
+const catchAsync = require('../utils/catchAsync');
 
 // Create and Save a new Category
-exports.create = (req, res) => {
+exports.create = catchAsync(async(req, res) => {
   console.log(req.body);
   // Validate request
   if (!req.body.title) {
-    res.status(400).send({ message: "Content can not be empty!" });
-    return;
+    return next(new AppError("Content can not be empty!", 400));   
   }
 
   // Create a Category
-  const category = new Category({
+  const category = await Category({
     title: req.body.title,
     description: req.body.description,
     published: req.body.published ? req.body.published : false,
-  });
+  }).save();
 
-  // Save Category in the database
-  category
-    .save(category)
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the category.",
-      });
-    });
-};
+  if (!category) {
+    return next(new AppError("Some error occurred while creating the category", 400));
+  }
+ 
+  res.status(200).json({
+    status: "success",    
+    category
+  });    
+});
 
 // Retrieve all Categorys from the database.
-exports.findAll = (req, res) => {
+exports.findAll = catchAsync(async (req, res) => {
   const title = req.query.title;
   var condition = title
     ? { title: { $regex: new RegExp(title), $options: "i" } }
     : {};
 
-  Category.find(condition)
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving categorys.",
-      });
-    });
-};
+    const category = await Category.find(condition);
+    if (!category) {
+      return next(new AppError("Some error occurred while retrieving categorys", 400));
+    }
+
+    res.status(200).json({
+      status: "success",    
+      category
+    });      
+});
 
 // Find a single Category with an id
-exports.findOne = (req, res) => {
+exports.findOne = catchAsync(async(req, res) => {
   const id = req.params.id;
+  
+  //Find a single Category
+  const category =  await Category.findById(id);
+  if (!category) {
+    return next(new AppError("Not found category with id " + id, 404));
+  }
 
-  Category.findById(id)
-    .then((data) => {
-      if (!data)
-        res.status(404).send({ message: "Not found category with id " + id });
-      else res.send(data);
-    })
-    .catch((err) => {
-      res
-        .status(500)
-        .send({ message: "Error retrieving category with id=" + id });
-    });
-};
+  res.status(200).json({
+    status: "success",    
+    category
+  });  
+    
+});
 
 // Update a Category by the id in the request
-exports.update = (req, res) => {
+exports.update = catchAsync(async(req, res) => {
   if (!req.body) {
-    return res.status(400).send({
-      message: "Data to update can not be empty!",
-    });
+    return next(new AppError("Data to update can not be empty!", 400));     
   }
 
   const id = req.params.id;
 
-  Category.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-    .then((data) => {
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot update category with id=${id}. Maybe category was not found!`,
-        });
-      } else res.send({ message: "Category was updated successfully." });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Error updating category with id=" + id,
-      });
-    });
-};
+  const category = await Category.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+  if (!category) {
+    return next(new AppError("Cannot update category with id=${id}. Maybe category was not found!", 404));
+  }
+
+  res.status(200).json({
+    status: "success", 
+    message: "Category was updated successfully.",   
+    category
+  });
+       
+});
 
 // Delete a Category with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = catchAsync(async(req, res) => {
   const id = req.params.id;
 
-  Category.findByIdAndRemove(id, { useFindAndModify: false })
-    .then((data) => {
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot delete category with id=${id}. Maybe category was not found!`,
-        });
-      } else {
-        res.send({
-          message: "Category was deleted successfully!",
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Could not delete category with id=" + id,
-      });
-    });
-};
+  const category = await Category.findByIdAndRemove(id, { useFindAndModify: false });
+  if (!category) {
+    return next(new AppError("Cannot delete category with id=${id}. Maybe category was not found!", 404));
+  }
 
-// Delete all Categorys from the database.
-exports.deleteAll = (req, res) => {
-  Category.deleteMany({})
-    .then((data) => {
-      res.send({
-        message: `${data.deletedCount} Categorys were deleted successfully!`,
-      });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while removing all categorys.",
-      });
-    });
-};
+  res.status(200).json({
+    status: "success", 
+    message: "Category was deleted successfully.",   
+    category
+  });
+     
+});
 
-// Find all published Categorys
-exports.findAllPublished = (req, res) => {
-  Category.find({ published: true })
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving categorys.",
-      });
-    });
-};
+// Delete all categories from the database.
+exports.deleteAll = catchAsync(async(req, res) => {
+  const categories = await Category.deleteMany({});
+
+  if (!categories) {
+    return next(new AppError("Some error occurred while removing all categories", 500));
+  }
+
+  res.status(200).json({
+    status: "success", 
+    message: `${data.deletedCount} categories were deleted successfully!`,   
+  });
+     
+});
+
+// Find all published categories
+exports.findAllPublished = catchAsync(async(req, res) => {
+  const categories = await Category.find({ published: true });
+
+  if (!categories) {
+    return next(new AppError("Some error occurred while removing all categories", 500));
+  }
+
+  res.status(200).json({
+    status: "success",     
+    categories
+  });
+    
+});
