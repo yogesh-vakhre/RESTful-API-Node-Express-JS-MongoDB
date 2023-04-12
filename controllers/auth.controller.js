@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const generateToken = require("../utils/generateToken");
+const { authErrors } = require("../utils/errors");
 
 // Create and Save a new User
 exports.create = catchAsync(async (req, res, next) => {
@@ -21,7 +22,7 @@ exports.create = catchAsync(async (req, res, next) => {
   const oldUser = await User.findOne({ email });
 
   if (oldUser) {
-    return next(new AppError("User Already Exist. Please Login", 409));
+    return next(new AppError(authErrors.userAlreadyExists, 409));
   }
 
   //Encrypt user password
@@ -37,7 +38,7 @@ exports.create = catchAsync(async (req, res, next) => {
   // return user
   res.status(200).json({
     status: "success",
-    token: generateToken(user._id),// Create token
+    token: generateToken(user._id), // Create token
     user,
   });
   // Our register logic ends here
@@ -60,10 +61,10 @@ exports.login = catchAsync(async (req, res, next) => {
     // user
     res.status(200).json({
       status: "success",
-      token: generateToken(user._id),// Create token
+      token: generateToken(user._id), // Create token
       user,
     });
   }
-  return next(new AppError("Invalid Credentials", 400));
+  return next(new AppError(authErrors.invalidUser, 400));
   // Our login logic ends here
 });
