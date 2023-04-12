@@ -8,6 +8,8 @@ const helmet = require("helmet");
 const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit')
+const AppError = require("./utils/appError");
+const globalErrorHandler = require("./controllers/error.controller");
 
 const indexRouter = require('./routes/index.routes');
  
@@ -67,5 +69,12 @@ app.get("/", (req, res) => {
     message: "Welcome to RESTful API"
   });
 });
+
+//add restriction for routes
+app.all("*", (req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on the server!`, 404));
+});
+
+app.use(globalErrorHandler);
 
 module.exports = app;
