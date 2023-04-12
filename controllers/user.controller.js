@@ -3,7 +3,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require('../utils/catchAsync');
 
 // Create and Save a new User
-exports.create = catchAsync(async(req, res) => {
+exports.create = catchAsync(async(req, res, next) => {
   console.log(req.body);
   // Validate request
   if (!req.body.name) {
@@ -56,7 +56,7 @@ exports.findAll = catchAsync(async(req, res) => {
 });
 
 // Find a single User with an id
-exports.findOne = catchAsync(async(req, res) => {
+exports.findOne = catchAsync(async(req, res,next) => {
   const id = req.params.id;
 
   // Find a single Category

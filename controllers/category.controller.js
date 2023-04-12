@@ -3,7 +3,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require('../utils/catchAsync');
 
 // Create and Save a new Category
-exports.create = catchAsync(async(req, res) => {
+exports.create = catchAsync(async(req, res, next) => {
   console.log(req.body);
   // Validate request
   if (!req.body.title) {
@@ -28,7 +28,7 @@ exports.create = catchAsync(async(req, res) => {
 });
 
 // Retrieve all Categorys from the database.
-exports.findAll = catchAsync(async (req, res) => {
+exports.findAll = catchAsync(async (req, res, next) => {
   const title = req.query.title;
   var condition = title
     ? { title: { $regex: new RegExp(title), $options: "i" } }
@@ -46,7 +46,7 @@ exports.findAll = catchAsync(async (req, res) => {
 });
 
 // Find a single Category with an id
-exports.findOne = catchAsync(async(req, res) => {
+exports.findOne = catchAsync(async(req, res, next) => {
   const id = req.params.id;
   
   //Find a single Category
@@ -63,7 +63,7 @@ exports.findOne = catchAsync(async(req, res) => {
 });
 
 // Update a Category by the id in the request
-exports.update = catchAsync(async(req, res) => {
+exports.update = catchAsync(async(req, res, next) => {
   if (!req.body) {
     return next(new AppError("Data to update can not be empty!", 400));     
   }
@@ -84,7 +84,7 @@ exports.update = catchAsync(async(req, res) => {
 });
 
 // Delete a Category with the specified id in the request
-exports.delete = catchAsync(async(req, res) => {
+exports.delete = catchAsync(async(req, res, next) => {
   const id = req.params.id;
 
   const category = await Category.findByIdAndRemove(id, { useFindAndModify: false });
@@ -101,7 +101,7 @@ exports.delete = catchAsync(async(req, res) => {
 });
 
 // Delete all categories from the database.
-exports.deleteAll = catchAsync(async(req, res) => {
+exports.deleteAll = catchAsync(async(req, res, next) => {
   const categories = await Category.deleteMany({});
 
   if (!categories) {
@@ -116,7 +116,7 @@ exports.deleteAll = catchAsync(async(req, res) => {
 });
 
 // Find all published categories
-exports.findAllPublished = catchAsync(async(req, res) => {
+exports.findAllPublished = catchAsync(async(req, res, next) => {
   const categories = await Category.find({ published: true });
 
   if (!categories) {

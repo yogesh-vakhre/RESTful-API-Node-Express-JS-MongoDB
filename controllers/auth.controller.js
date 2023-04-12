@@ -5,7 +5,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
 // Create and Save a new User
-exports.create = catchAsync(async (req, res) => {
+exports.create = catchAsync(async (req, res, next) => {
   // Our register logic starts here
   // Get user input
   const { name, email, password } = req.body;
@@ -49,7 +49,7 @@ exports.create = catchAsync(async (req, res) => {
 });
 
 //Login a User
-exports.login = catchAsync(async (req, res) => {
+exports.login = catchAsync(async (req, res, next) => {
   // Our login logic starts here
   // Get user input
   const { email, password } = req.body;
