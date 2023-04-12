@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
+const generateToken = require("../utils/generateToken");
 
 // Create and Save a new User
 exports.create = catchAsync(async (req, res, next) => {
@@ -33,16 +34,10 @@ exports.create = catchAsync(async (req, res, next) => {
     password: encryptedUserPassword,
   });
 
-  // Create token
-  const token = jwt.sign({ id: user._id }, process.env.TOKEN_KEY, {
-    expiresIn: "5h",
-  });
-  // save user token
-  user.token = token;
-
   // return user
   res.status(200).json({
     status: "success",
+    token: generateToken(user._id),// Create token
     user,
   });
   // Our register logic ends here
@@ -62,17 +57,10 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email });
 
   if (user && (await bcrypt.compare(password, user.password))) {
-    // Create token
-    const token = jwt.sign({ id: user._id }, process.env.TOKEN_KEY, {
-      expiresIn: "5h",
-    });
-
-    // save user token
-    user.token = token;
-
     // user
     res.status(200).json({
       status: "success",
+      token: generateToken(user._id),// Create token
       user,
     });
   }
