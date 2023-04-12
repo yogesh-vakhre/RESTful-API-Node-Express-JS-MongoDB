@@ -84,4 +84,28 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+//Create User
+userSchema.statics.createUser = async function (data) {
+  const user = await this.create({ ...data });
+  user.confirmPassword = undefined;
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  user.emailVerifyToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  user.emailVerifyTokenExpires = Date.now() + 30 * 60 * 1000;
+
+  user.save({ validateBeforeSave: false });
+  user.resetToken = resetToken;
+  return user;
+};
+
+//check password User
+userSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
+
 module.exports = mongoose.model("user", userSchema);
