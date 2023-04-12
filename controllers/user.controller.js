@@ -40,7 +40,7 @@ exports.create = catchAsync(async(req, res, next) => {
 });
 
 // Retrieve all Users from the database.
-exports.findAll = catchAsync(async(req, res) => {
+exports.findAll = catchAsync(async(req, res ,next) => {
   const name = req.query.name;
   var condition = name ? { name: { $regex: new RegExp(name), $options: "i" } } : {};
 
@@ -56,7 +56,7 @@ exports.findAll = catchAsync(async(req, res) => {
 });
 
 // Find a single User with an id
-exports.findOne = catchAsync(async(req, res,next) => {
+exports.findOne = catchAsync(async(req, res, next) => {
   const id = req.params.id;
 
   // Find a single Category
@@ -73,7 +73,7 @@ exports.findOne = catchAsync(async(req, res,next) => {
 });
 
 // Update a User by the id in the request
-exports.update = catchAsync(async(req, res) => {
+exports.update = catchAsync(async(req, res ,next) => {
   if (!req.body) {
     return next(new AppError("Data to update can not be empty!", 400));     
   }
@@ -94,7 +94,7 @@ exports.update = catchAsync(async(req, res) => {
 });
 
 // Delete a User with the specified id in the request
-exports.delete = catchAsync(async(req, res) => {
+exports.delete = catchAsync(async(req, res ,next) => {
   const id = req.params.id;
 
   const user = await User.findByIdAndRemove(id, { useFindAndModify: false });
@@ -111,7 +111,7 @@ exports.delete = catchAsync(async(req, res) => {
 });
 
 // Delete all Users from the database.
-exports.deleteAll = catchAsync(async(req, res) => {
+exports.deleteAll = catchAsync(async(req, res ,next) => {
   const user = await User.deleteMany({});
   if (!user) {
     return next(new AppError(`Some error occurred while removing all users!`, 500));
@@ -124,7 +124,7 @@ exports.deleteAll = catchAsync(async(req, res) => {
 });
 
 // Find all published Users
-exports.findAllPublished = catchAsync(async(req, res) => {
+exports.findAllPublished = catchAsync(async(req, res ,next) => {
   const users = await User.find({ published: true });
   if (!users) {
     return next(new AppError("Some error occurred while retrieving users.", 500));
